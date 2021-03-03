@@ -1,4 +1,5 @@
 from random import randrange
+from sys import exit
 
 MIN_PLAYER_START = 16
 MAX_PLAYER_START = 20
@@ -62,15 +63,21 @@ class Game:
         self._states['bats'] = self.player_in_bad_room(room, bats)
         self._states['bats_nearby'] = self.adjacent_bad_room(self._connected_rooms, bats)
     
-    def process_player(self):
-        action = get_player_command()
-        if action == 'M':
-            self.process_move()
-        elif action == 'S':
-            shot_rooms = self.process_shoot()
-        
-
-
+    def process_game(self):
+        if self._states['trapped']:
+            restart = self.process_gameover()
+            if restart:
+                self.new_game()
+            else:
+                exit()
+        else:
+            action = get_player_command()
+            if action == 'M':
+                self.process_move()
+            elif action == 'S':
+                shot_rooms = self.process_shoot()
+            elif action == 'Q':
+                exit()
 
     def process_move(self):
         room = get_int_value('Enter a room number')
@@ -84,7 +91,7 @@ class Game:
 
 
     def process_shoot(self):
-        num_rooms = get_int_value('Number of rooms? (1-5):')
+        num_rooms = get_int_value('Number of rooms? (1-5)')
         num_rooms = 1 if not num_rooms else num_rooms
         room_list = []
         current_room = self._current_room
@@ -95,8 +102,14 @@ class Game:
             room_list.append(room)
             current_room = room
         return room_list
-
-
+    
+    def process_gameover(self) -> bool:
+        while True:
+            restart = input('Would you like to play again? (Y, N): ')
+            if restart.upper() not in ('Y', 'N'):
+                print('That is not a valid option')
+                continue
+            return True if restart.upper() == 'Y' else False
 
 
     def pick_rooms(self, num_rooms: int) -> tuple:
@@ -129,8 +142,9 @@ def display_room(room, connected_rooms, states: dict):
 
 
 def get_player_command() -> str:
-    action = input('What would you like to do? (M - move, S - shoot): ')
-    if action.upper() not in ('M', 'S'):
+    print('What would you like to do? (M - move, S - shoot)')
+    action = input('Or type \'Q\' to quit: ')
+    if action.upper() not in ('M', 'S', 'Q'):
         print('I do not understand your action')
         return 'N'
     else:
@@ -140,11 +154,9 @@ def get_int_value(prompt: str) -> int:
     room = input(f'{prompt}: ')
     try:
         room = int(room)
-        print()
         return room
     except ValueError:
         print(f'{room} is not a number')
-        print()
         return -1
 
 
@@ -153,7 +165,7 @@ def main():
     game = Game(CAVE)
     while True:
         display_room(game._current_room, game._connected_rooms, game._states)
-        game.process_player()
+        game.process_game()
 
 
 if __name__ == "__main__":

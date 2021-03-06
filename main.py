@@ -34,6 +34,7 @@ class Game:
     def __init__(self, layout: tuple):
         self._cave = layout
         self._current_room = 0
+        self._crognac_room = 0
         self._connected_rooms = [0]
         self._trap_locations = [0]
         self._bat_locations = [0]
@@ -43,74 +44,109 @@ class Game:
     def new_game(self):
         self._current_room = randrange(MIN_PLAYER_START, MAX_PLAYER_START+1)
         self._connected_rooms = self._cave[self._current_room]
+
+        self._crognac_room = randrange(MIN_CROGNAC_START, MAX_CROGNAC_START+1)
+
+        occupied_rooms = {self._current_room, self._crognac_room}
+
         while True:
             if len(self._trap_locations) < 2 or \
-            self._current_room in self._trap_locations:
+            occupied_rooms.intersection(self._trap_locations):
                 self._trap_locations = self.pick_rooms(2)
             elif len(self._bat_locations) < 2 or \
-            self._current_room in self._bat_locations:
+            occupied_rooms.intersection(self._bat_locations):
                 self._bat_locations = self.pick_rooms(2)
             else:
                 break
+
         self.get_updated_states()
         
     def get_updated_states(self):
         room = self._current_room
         traps = self._trap_locations
         bats = self._bat_locations
+
         self._states['trapped'] = self.player_in_bad_room(room, traps)
         self._states['trap_nearby'] = self.adjacent_bad_room(self._connected_rooms, traps)
         self._states['bats'] = self.player_in_bad_room(room, bats)
         self._states['bats_nearby'] = self.adjacent_bad_room(self._connected_rooms, bats)
-    
+        self._states['crognac'] = self.player_in_bad_room(self._current_room, [self._crognac_room])
+        self._states['crognac_nearby'] = self.adjacent_bad_room(self._connected_rooms, [self._crognac_room])
+
     def process_game(self):
         if self._states['trapped']:
-            restart = self.process_gameover()
-            if restart:
-                self.new_game()
-            else:
-                exit()
+            self.process_gameover()
+        elif self._states['crognac']:
+            self.process_crognac()
         else:
-            action = get_player_command()
-            if action == 'M':
-                self.process_move()
-            elif action == 'S':
-                shot_rooms = self.process_shoot()
-            elif action == 'Q':
-                exit()
+            self.process_player()
+
+    def process_player(self):
+        action = get_player_command()
+
+        if action == 'M':
+            self.process_move()
+        elif action == 'S':
+            self.process_shoot()
+        elif action == 'Q':
+            exit()
 
     def process_move(self):
         room = get_int_value('Enter a room number')
-        if room <= 0 or room > 20 or room not in self._connected_rooms:
+        if not room:
+            pass
+        elif room not in self._connected_rooms:
             print(f'Room {room} is not a valid room')
-            print()
         else:
             self._current_room = room
             self._connected_rooms = self._cave[room]
             self.get_updated_states()
-
 
     def process_shoot(self):
         num_rooms = get_int_value('Number of rooms? (1-5)')
         num_rooms = 1 if not num_rooms else num_rooms
         room_list = []
         current_room = self._current_room
+
         for i in range(num_rooms):
             room = get_int_value('Enter a room number')
+
             if room not in self._cave[current_room]:
                 room = self._cave[current_room][randrange(0, 3)]
+
             room_list.append(room)
             current_room = room
-        return room_list
+        
+        if self._crognac_room in room_list:
+            print("\nOW! Hey! You got me. I'll get you next time.")
+            self.process_gameover()
     
-    def process_gameover(self) -> bool:
-        while True:
-            restart = input('Would you like to play again? (Y, N): ')
-            if restart.upper() not in ('Y', 'N'):
-                print('That is not a valid option')
-                continue
-            return True if restart.upper() == 'Y' else False
+    def process_crognac(self) -> None:
+        attack_chance = randrange(0, 100)
+        if attack_chance >= 90:
+            print("\nCrognac has noticed you.")
+            print("He turns around and shout 'AHA! Now you Die!'")
+            print("With one swift motion he cleaves your head off")
 
+            self.process_gameover()
+        else:
+            print("\nCrognac notices your approach and flees")
+            
+            self._crognac_room = self._connected_rooms[randrange(0, 3)]
+
+            self.get_updated_states()
+
+    def process_gameover(self) -> None:
+        while True:
+            restart = input('\nWould you like to play again? (Y, N): ')
+            if restart.upper() == 'Y':
+                self.new_game()
+                break
+            elif restart.upper() == 'N':
+                print("See you later!")
+                exit()
+            else:
+                print("That is not a valid option")
 
     def pick_rooms(self, num_rooms: int) -> tuple:
         rooms = []
@@ -130,8 +166,8 @@ class Game:
         return False
 
 
-def display_room(room, connected_rooms, states: dict):
-    print(f'You stand in room {room}')
+def display_room(room, connected_rooms, states: dict) -> None:
+    print(f'\nYou stand in room {room}')
     rooms_str = ' '.join(map(str, connected_rooms))
     print(f'Tunnels lead to {rooms_str}')
 
@@ -140,10 +176,21 @@ def display_room(room, connected_rooms, states: dict):
     elif states['trap_nearby']:
         print('You feel a draft from a nearby pitfall')
 
+    if states['bats']:
+        print(f"What is this?!?! I can't controll my body.")
+    elif states['bats_nearby']:
+        print(f"You hear bats screaching nearby")
+
+    if states['crognac']:
+        print(f"Crognac stands before you")
+    elif states['crognac_nearby']:
+        print(f"You smell an orc")
+
 
 def get_player_command() -> str:
-    print('What would you like to do? (M - move, S - shoot)')
+    print('\nWhat would you like to do? (M - move, S - shoot)')
     action = input('Or type \'Q\' to quit: ')
+    
     if action.upper() not in ('M', 'S', 'Q'):
         print('I do not understand your action')
         return 'N'
@@ -152,12 +199,12 @@ def get_player_command() -> str:
 
 def get_int_value(prompt: str) -> int:
     room = input(f'{prompt}: ')
-    try:
-        room = int(room)
-        return room
-    except ValueError:
+
+    if room.isnumeric():
+        return int(room)
+    else:
         print(f'{room} is not a number')
-        return -1
+        return None
 
 
 def main():

@@ -1,3 +1,9 @@
+# TODO: add arrow count and limit the number of shots
+# TODO: force game over when player runs out of arrows
+# TODO: create a function to update the current room to get rid of some repeated code
+# TODO: eventually refactor how the states are handled since only one thing can happen
+# in the current room but multiple dangers can be nearby.
+
 from random import randrange
 from sys import exit
 
@@ -67,12 +73,12 @@ class Game:
         traps = self._trap_locations
         bats = self._bat_locations
 
-        self._states['trapped'] = self.player_in_bad_room(room, traps)
-        self._states['trap_nearby'] = self.adjacent_bad_room(self._connected_rooms, traps)
-        self._states['bats'] = self.player_in_bad_room(room, bats)
-        self._states['bats_nearby'] = self.adjacent_bad_room(self._connected_rooms, bats)
-        self._states['crognac'] = self.player_in_bad_room(self._current_room, [self._crognac_room])
-        self._states['crognac_nearby'] = self.adjacent_bad_room(self._connected_rooms, [self._crognac_room])
+        self._states['trapped'] = self.player_in_danger(room, traps)
+        self._states['trap_nearby'] = self.danger_nearby(self._connected_rooms, traps)
+        self._states['bats'] = self.player_in_danger(room, bats)
+        self._states['bats_nearby'] = self.danger_nearby(self._connected_rooms, bats)
+        self._states['crognac'] = self.player_in_danger(self._current_room, [self._crognac_room])
+        self._states['crognac_nearby'] = self.danger_nearby(self._connected_rooms, [self._crognac_room])
 
     def process_game(self):
         if self._states['trapped']:
@@ -164,10 +170,10 @@ class Game:
                 rooms.append(pick)
         return tuple(rooms)
 
-    def player_in_bad_room(self, player_location, bad_rooms):
+    def player_in_danger(self, player_location, bad_rooms):
         return player_location in bad_rooms
 
-    def adjacent_bad_room(self, adjacent_rooms, bad_rooms):
+    def danger_nearby(self, adjacent_rooms, bad_rooms):
         for i in range(len(bad_rooms)):
             if bad_rooms[i] in adjacent_rooms:
                 return True

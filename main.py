@@ -5,6 +5,7 @@ MIN_PLAYER_START = 16
 MAX_PLAYER_START = 20
 MIN_CROGNAC_START = 1
 MAX_CROGNAC_START = 5
+CROGNAC_ATTACK_CHANCE = 75
 CAVE = (
     (0, 0, 0),
     (2, 5, 8),
@@ -76,6 +77,8 @@ class Game:
     def process_game(self):
         if self._states['trapped']:
             self.process_gameover()
+        elif self._states['bats']:
+            self.process_bats()
         elif self._states['crognac']:
             self.process_crognac()
         else:
@@ -123,7 +126,7 @@ class Game:
     
     def process_crognac(self) -> None:
         attack_chance = randrange(0, 100)
-        if attack_chance >= 90:
+        if attack_chance >= CROGNAC_ATTACK_CHANCE:
             print("\nCrognac has noticed you.")
             print("He turns around and shout 'AHA! Now you Die!'")
             print("With one swift motion he cleaves your head off")
@@ -135,6 +138,11 @@ class Game:
             self._crognac_room = self._connected_rooms[randrange(0, 3)]
 
             self.get_updated_states()
+
+    def process_bats(self) -> None:
+        self._current_room = randrange(1, 21)
+        self._connected_rooms = self._cave[self._current_room]
+        self.get_updated_states()
 
     def process_gameover(self) -> None:
         while True:
@@ -177,7 +185,7 @@ def display_room(room, connected_rooms, states: dict) -> None:
         print('You feel a draft from a nearby pitfall')
 
     if states['bats']:
-        print(f"What is this?!?! I can't controll my body.")
+        print(f"*SCREEEEECH* What is happenin? A bat is carrying you off")
     elif states['bats_nearby']:
         print(f"You hear bats screaching nearby")
 

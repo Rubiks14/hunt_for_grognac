@@ -1,6 +1,14 @@
+# TODO: Add a text message to show the current number of arrows that the player has left
+# TODO: ask the player if they want to see instructions when they start a new game
+# and create a function that displays the instructions if the player says yes
 # TODO: create a function to update the current room to get rid of some repeated code
 # TODO: eventually refactor how the states are handled since only one thing can happen
-# in the current room but multiple dangers can be nearby.
+# in the current room but multiple dangers can be nearby
+# TODO: Find a better name for the pick_rooms function that better describes what it is
+# actually doing
+# TODO: Allow crognac to move about the map.
+# TODO: Change the behavior of the bats so that they move the player closer to danger
+# instead of dropping them in a random room.
 
 from random import randrange
 from sys import exit
@@ -37,7 +45,7 @@ CAVE = (
 
 
 class Game:
-    def __init__(self, layout: tuple):
+    def __init__(self, layout: tuple) -> None:
         self._cave = layout
         self._current_room = 0
         self._crognac_room = 0
@@ -48,7 +56,7 @@ class Game:
         self._states = dict()
         self.new_game()
     
-    def new_game(self):
+    def new_game(self) -> None:
         self._current_room = randrange(MIN_PLAYER_START, MAX_PLAYER_START+1)
         self._connected_rooms = self._cave[self._current_room]
 
@@ -70,7 +78,7 @@ class Game:
 
         self.get_updated_states()
         
-    def get_updated_states(self):
+    def get_updated_states(self) -> None:
         room = self._current_room
         traps = self._trap_locations
         bats = self._bat_locations
@@ -82,7 +90,7 @@ class Game:
         self._states['crognac'] = self.player_in_danger(self._current_room, [self._crognac_room])
         self._states['crognac_nearby'] = self.danger_nearby(self._connected_rooms, [self._crognac_room])
 
-    def process_game(self):
+    def process_game(self) -> None:
         if self._states['trapped']:
             self.process_gameover()
         elif self._states['bats']:
@@ -92,7 +100,7 @@ class Game:
         else:
             self.process_player()
 
-    def process_player(self):
+    def process_player(self) -> None:
         action = get_player_command()
 
         if action == 'M':
@@ -102,7 +110,7 @@ class Game:
         elif action == 'Q':
             exit()
 
-    def process_move(self):
+    def process_move(self) -> None:
         room = get_int_value('Enter a room number')
         if not room:
             pass
@@ -113,7 +121,7 @@ class Game:
             self._connected_rooms = self._cave[room]
             self.get_updated_states()
 
-    def process_shoot(self):
+    def process_shoot(self) -> None:
         num_rooms = get_int_value('Number of rooms? (1-5)')
         num_rooms = 1 if not num_rooms else num_rooms
         room_list = []
@@ -180,10 +188,10 @@ class Game:
                 rooms.append(pick)
         return tuple(rooms)
 
-    def player_in_danger(self, player_location, bad_rooms):
+    def player_in_danger(self, player_location: tuple, bad_rooms: tuple) -> bool:
         return player_location in bad_rooms
 
-    def danger_nearby(self, adjacent_rooms, bad_rooms):
+    def danger_nearby(self, adjacent_rooms: tuple, bad_rooms: tuple) -> bool:
         for i in range(len(bad_rooms)):
             if bad_rooms[i] in adjacent_rooms:
                 return True
@@ -231,9 +239,9 @@ def get_int_value(prompt: str) -> int:
         return None
 
 
-def main():
-    
+def main():  
     game = Game(CAVE)
+
     while True:
         display_room(game._current_room, game._connected_rooms, game._states)
         game.process_game()

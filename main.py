@@ -1,5 +1,3 @@
-# TODO: add arrow count and limit the number of shots
-# TODO: force game over when player runs out of arrows
 # TODO: create a function to update the current room to get rid of some repeated code
 # TODO: eventually refactor how the states are handled since only one thing can happen
 # in the current room but multiple dangers can be nearby.
@@ -10,7 +8,8 @@ from sys import exit
 MIN_PLAYER_START = 16
 MAX_PLAYER_START = 20
 MIN_CROGNAC_START = 1
-MAX_CROGNAC_START = 5
+MAX_CROGNAC_START = 15
+MAX_ARROW_COUNT = 2
 CROGNAC_ATTACK_CHANCE = 75
 CAVE = (
     (0, 0, 0),
@@ -42,6 +41,7 @@ class Game:
         self._cave = layout
         self._current_room = 0
         self._crognac_room = 0
+        self._arrow_count = 0
         self._connected_rooms = [0]
         self._trap_locations = [0]
         self._bat_locations = [0]
@@ -53,6 +53,8 @@ class Game:
         self._connected_rooms = self._cave[self._current_room]
 
         self._crognac_room = randrange(MIN_CROGNAC_START, MAX_CROGNAC_START+1)
+
+        self._arrow_count = MAX_ARROW_COUNT
 
         occupied_rooms = {self._current_room, self._crognac_room}
 
@@ -126,10 +128,18 @@ class Game:
             room_list.append(room)
             current_room = room
         
-        if self._crognac_room in room_list:
+        self._arrow_count -= 1
+        if self._current_room in room_list:
+            print("\nThe arrow whizzes into the room and strikes you in the chest.")
+            print("Crognac enters the room and says 'I can't believe you shot yourself! BAHAHAHA!'")
+            self.process_gameover()
+        elif self._crognac_room in room_list:
             print("\nOW! Hey! You got me. I'll get you next time.")
             self.process_gameover()
-    
+        elif self._arrow_count <= 0:
+            print("\nYou have run out of arrows. There is no way to defeat Crognac now.")
+            self.process_gameover()  
+        
     def process_crognac(self) -> None:
         attack_chance = randrange(0, 100)
         if attack_chance >= CROGNAC_ATTACK_CHANCE:

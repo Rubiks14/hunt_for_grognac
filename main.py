@@ -1,7 +1,3 @@
-# TODO: Add a text message to show the current number of arrows that the player has left
-# TODO: ask the player if they want to see instructions when they start a new game
-# and create a function that displays the instructions if the player says yes
-# TODO: create a function to update the current room to get rid of some repeated code
 # TODO: eventually refactor how the states are handled since only one thing can happen
 # in the current room but multiple dangers can be nearby
 # TODO: Find a better name for the pick_rooms function that better describes what it is
@@ -83,6 +79,11 @@ class Game:
         answer = input("Would you like to see the instructions? (Y/N): ")
         if answer.upper() == 'Y':
             display_instructions()
+
+    def change_room(self, new_room) -> None:
+        self._current_room = new_room
+        self._connected_rooms = self._cave[self._current_room]
+        self.get_updated_states()
         
     def get_updated_states(self) -> None:
         room = self._current_room
@@ -123,9 +124,7 @@ class Game:
         elif room not in self._connected_rooms:
             print(f'Room {room} is not a valid room')
         else:
-            self._current_room = room
-            self._connected_rooms = self._cave[room]
-            self.get_updated_states()
+            self.change_room(room)
 
     def process_shoot(self) -> None:
         num_rooms = get_int_value('Number of rooms? (1-5)')
@@ -143,6 +142,8 @@ class Game:
             current_room = room
         
         self._arrow_count -= 1
+        print(f"You fire an arrow. You have {self._arrow_count} arrows left.")
+
         if self._current_room in room_list:
             print("\nThe arrow whizzes into the room and strikes you in the chest.")
             print("Crognac enters the room and says 'I can't believe you shot yourself! BAHAHAHA!'")
@@ -170,9 +171,7 @@ class Game:
             self.get_updated_states()
 
     def process_bats(self) -> None:
-        self._current_room = randrange(1, 21)
-        self._connected_rooms = self._cave[self._current_room]
-        self.get_updated_states()
+        self.change_room(randrange(1, 21))
 
     def process_gameover(self) -> None:
         while True:

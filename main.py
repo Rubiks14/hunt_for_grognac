@@ -77,6 +77,12 @@ class Game:
                 break
 
         self.get_updated_states()
+        self.process_help()
+    
+    def process_help(self) -> None:
+        answer = input("Would you like to see the instructions? (Y/N): ")
+        if answer.upper() == 'Y':
+            display_instructions()
         
     def get_updated_states(self) -> None:
         room = self._current_room
@@ -198,6 +204,26 @@ class Game:
         return False
 
 
+def display_instructions() -> None:
+    print("\nCrognak is a grotesque orcish being that has been responsible for " +
+        "the deaths of many villagers and travelling merchants. He has been " +
+        "tracked to a local cave and you have been sent to dispense of him. " +
+        "The cave is made of 20 rooms each connected to three other rooms " +
+        "in the shape of a dodecahedron.\n\n" +
+        "Beware though as Crognak has a few tricks up his sleaves. There are " +
+        "traps and pitfalls as well as mysterious beings that can control your " +
+        "mind and move you toward danger.\n\n" +
+        "Crognak moves about the cave in the same way that you do. However, he " +
+        "knows which rooms to avoid. If he enters the room after your movement " +
+        "then he will kill you. If you manage to sneak up on him he is likely to flee, " +
+        "but he may also kill you on the spot.\n\n" +
+        "The only way to kill Crognak is to shoot one of your five magic arrows. " +
+        "When you fire your arrow you can move it through 1 to 5 rooms in search " +
+        "of Crognak. The rooms must be connected to each other. If your path includes " +
+        "rooms that are not connected to your path then your arrow's path will be chosen " +
+        "at random")
+
+
 def display_room(room, connected_rooms, states: dict) -> None:
     print(f'\nYou stand in room {room}')
     rooms_str = ' '.join(map(str, connected_rooms))
@@ -228,6 +254,7 @@ def get_player_command() -> str:
         return 'N'
     else:
         return action.upper()
+
 
 def get_int_value(prompt: str) -> int:
     room = input(f'{prompt}: ')

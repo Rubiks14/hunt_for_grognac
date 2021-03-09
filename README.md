@@ -19,7 +19,7 @@ knows which rooms to avoid. If he enters the room after your movement
 then he will kill you. If you manage to sneak up on him he is likely to flee,
 but he may also kill you on the spot.
 
-The only way to kill Crognak is to shoot one of your magic arrows.
+The only way to kill Crognak is to shoot one of your five magic arrows.
 When you fire your arrow you can move it through 1 to 5 rooms in search
 of Crognak. The rooms must be connected to each other. If your path includes
 rooms that are not connected to your path then your arrow's path will be chosen
